@@ -1,5 +1,5 @@
-const SHELL_CACHE = "rollout-shell-20260616-2";
-const RUNTIME_CACHE = "rollout-runtime-20260616-2";
+const SHELL_CACHE = "rollout-shell-20260616-3";
+const RUNTIME_CACHE = "rollout-runtime-20260616-3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const APP_SHELL = [
   "./regels.html",
   "./netwerken.html",
   "./over.html",
-  "./styles.css?v=20260616-2",
+  "./styles.css?v=20260616-3",
   "./app.js?v=20260616-2",
   "./routebronnen.js?v=20260615-2",
   "./public-data.js?v=20260615-4",
@@ -16,7 +16,7 @@ const APP_SHELL = [
   "./icon-512.png",
   "./apple-touch-icon.png",
   "./manifest.webmanifest",
-  "./pwa.js"
+  "./pwa.js?v=20260616-3"
 ];
 
 self.addEventListener("install", (event) => {
