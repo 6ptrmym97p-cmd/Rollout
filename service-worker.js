@@ -1,0 +1,78 @@
+const SHELL_CACHE = "rollout-shell-20260616-2";
+const RUNTIME_CACHE = "rollout-runtime-20260616-2";
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./routebronnen.html",
+  "./regels.html",
+  "./netwerken.html",
+  "./over.html",
+  "./styles.css?v=20260616-2",
+  "./app.js?v=20260616-2",
+  "./routebronnen.js?v=20260615-2",
+  "./public-data.js?v=20260615-4",
+  "./favicon.svg?v=20260615-2",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png",
+  "./manifest.webmanifest",
+  "./pwa.js"
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL)));
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((key) => ![SHELL_CACHE, RUNTIME_CACHE].includes(key)).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
+});
+
+async function networkFirst(request) {
+  const cache = await caches.open(RUNTIME_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch (error) {
+    return (await cache.match(request)) || (await caches.match(request)) || caches.match("./index.html");
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok || response.type === "opaque") {
+    const cache = await caches.open(RUNTIME_CACHE);
+    await cache.put(request, response.clone());
+    const keys = await cache.keys();
+    if (keys.length > 300) await cache.delete(keys[0]);
+  }
+  return response;
+}
+
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET") return;
+
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  const url = new URL(request.url);
+  const isMapTile = url.hostname.endsWith("basemaps.cartocdn.com");
+  const isStaticAsset = request.destination === "style"
+    || request.destination === "script"
+    || request.destination === "font"
+    || request.destination === "image";
+
+  if (url.origin === self.location.origin || isMapTile || isStaticAsset) {
+    event.respondWith(cacheFirst(request));
+  }
+});

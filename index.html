@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Vind legale en goedkope slaapplekken voor bikepacking in elf landen van Scandinavië tot de Alpen."
+    />
+    <title>Rollout | Slaapplekken voor bikepacking</title>
+    <meta name="theme-color" content="#123127" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="icon" href="favicon.svg?v=20260615-2" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,500;6..72,600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIINfQ3ynhFrqJ5t8R4VvO+9RmI40Z4k2Y0="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="styles.css?v=20260616-2" />
+  </head>
+  <body class="map-app">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Rollout kaart">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+          <path class="logo-tent" d="M6 44 22 12l17 32Z" />
+          <path class="logo-door" d="M22 13v31" />
+          <circle class="logo-wheel" cx="39" cy="44" r="7" />
+          <circle class="logo-wheel" cx="55" cy="44" r="7" />
+          <path class="logo-bike" d="m39 44 7-14 9 14H39l5-9h8m-7-5-2-5h-4m13 5 3-5h4" />
+        </svg>
+        <span>Rollout</span>
+      </a>
+      <nav aria-label="Hoofdnavigatie">
+        <a href="index.html" aria-current="page">Kaart</a>
+        <a href="routebronnen.html">Routes</a>
+        <a href="regels.html">Regels</a>
+      </nav>
+      <a class="header-action" href="over.html">Over</a>
+    </header>
+
+    <main class="map-main">
+      <section class="map-section" id="kaart">
+        <h1 class="visually-hidden">Slaapplekken voor bikepacking</h1>
+
+        <div class="map-shell">
+          <div class="map-frame">
+            <div id="map" aria-label="Kaart met slaapplekken"></div>
+            <div class="map-key">
+              <span><i class="key-official"></i> Officiële slaapplek</span>
+              <span><i class="key-vodf"></i> Vrienden op de Fiets</span>
+              <span><i class="key-wtmg"></i> Welcome To My Garden</span>
+            </div>
+          </div>
+
+          <div class="map-actions" aria-label="Kaartacties">
+            <button class="map-overlay-button filter-toggle" id="toggle-filters" type="button" aria-controls="map-sidebar" aria-expanded="false">
+              <span aria-hidden="true">☷</span> Filters
+            </button>
+            <button class="map-overlay-button route-upload-button" id="quick-route" type="button">
+              <span aria-hidden="true">⌁</span> GPX laden
+            </button>
+          </div>
+          <div class="map-decision-actions" aria-label="Onderweg kiezen">
+            <button class="map-location-button" id="locate-me" type="button" aria-label="Ga naar mijn huidige positie" title="Mijn positie">
+              <span aria-hidden="true">◎</span>
+            </button>
+            <button class="tonight-button" id="show-candidates" type="button">
+              <span aria-hidden="true">⌖</span>
+              <strong>Plek voor vannacht</strong>
+            </button>
+          </div>
+          <p class="location-status" id="location-status" aria-live="polite" hidden></p>
+          <div class="map-overlay-scrim" id="map-overlay-scrim" hidden></div>
+
+          <aside class="map-sidebar" id="map-sidebar" aria-label="Kaartfilters" aria-hidden="true">
+            <div class="overlay-panel-heading">
+              <div>
+                <span>Kaartinstellingen</span>
+                <strong>Wat wil je zien?</strong>
+              </div>
+              <button class="overlay-close" id="close-filters" type="button" aria-label="Filters sluiten">×</button>
+            </div>
+            <div class="filter-block">
+              <label for="country-filter">Land</label>
+              <select id="country-filter">
+                <option value="all">Alle elf landen</option>
+                <option value="NL">Nederland</option>
+                <option value="BE">België</option>
+                <option value="LU">Luxemburg</option>
+                <option value="DE">Duitsland</option>
+                <option value="DK">Denemarken</option>
+                <option value="SE">Zweden</option>
+                <option value="NO">Noorwegen</option>
+                <option value="FR">Frankrijk</option>
+                <option value="CH">Zwitserland</option>
+                <option value="AT">Oostenrijk</option>
+                <option value="IT">Italië</option>
+              </select>
+            </div>
+
+            <fieldset class="filter-block">
+              <legend>Slaapvorm</legend>
+              <label class="check-row">
+                <input type="checkbox" value="wild" checked />
+                <span class="legend-dot dot-wild"></span>
+                Vrij kamperen
+              </label>
+              <label class="check-row">
+                <input type="checkbox" value="designated" checked />
+                <span class="legend-dot dot-designated"></span>
+                Aangewezen gratis plek
+              </label>
+              <label class="check-row">
+                <input type="checkbox" value="hut" checked />
+                <span class="legend-dot dot-hut"></span>
+                Hut of shelter
+              </label>
+              <label class="check-row">
+                <input type="checkbox" value="host" checked />
+                <span class="legend-dot dot-host"></span>
+                Gastnetwerk
+              </label>
+              <label class="check-row">
+                <input type="checkbox" value="ask" checked />
+                <span class="legend-dot dot-ask"></span>
+                Toestemming vragen
+              </label>
+            </fieldset>
+
+            <fieldset class="filter-block network-filter">
+              <legend>Gastnetwerklaag</legend>
+              <label class="check-row">
+                <input type="checkbox" data-network="warmshowers" disabled />
+                <span class="legend-ring ring-warmshowers"></span>
+                Warmshowers <small>(nog geen import)</small>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" data-network="wtmg" checked />
+                <span class="legend-ring ring-wtmg"></span>
+                Welcome To My Garden
+              </label>
+              <label class="check-row">
+                <input type="checkbox" data-network="vodf" checked />
+                <span class="legend-ring ring-vodf"></span>
+                Vrienden op de Fiets
+              </label>
+              <p class="microcopy network-note">
+                Vrienden op de Fiets en Welcome To My Garden tonen losse openbare bronpins
+                bij maximaal inzoomen. De Warmshowers-app toont een hostkaart, maar biedt geen stabiele
+                openbare export die hier nu als kaartlaag wordt ingelezen.
+              </p>
+            </fieldset>
+
+            <div class="filter-block confidence-filter">
+              <label for="confidence-filter">Minimale zekerheid</label>
+              <select id="confidence-filter">
+                <option value="1">Alles tonen</option>
+                <option value="2" selected>Redelijk zeker</option>
+                <option value="3">Alleen officiële bron</option>
+              </select>
+            </div>
+
+            <fieldset class="filter-block route-filter" id="route-import">
+              <legend>Mijn route</legend>
+              <label class="button button-quiet gpx-button" for="gpx-file">
+                Kies GPX uit Bestanden
+              </label>
+              <input id="gpx-file" class="visually-hidden" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" />
+              <a class="route-source-link" href="routebronnen.html">Nog geen GPX? Vind een route <span>→</span></a>
+              <div class="route-distance-control">
+                <label for="route-distance">Maximale afstand van route</label>
+                <output id="route-distance-output" for="route-distance">10 km</output>
+              </div>
+              <input id="route-distance" class="route-distance" type="range" min="1" max="50" step="1" value="10" disabled />
+              <div class="route-presets" aria-label="Snelle afstandskeuze">
+                <button type="button" data-route-distance="3" disabled>3 km</button>
+                <button type="button" data-route-distance="8" disabled>8 km</button>
+                <button type="button" data-route-distance="15" disabled>15 km</button>
+                <button type="button" data-route-distance="25" disabled>25 km</button>
+              </div>
+              <label class="check-row route-active-row">
+                <input id="route-filter-active" type="checkbox" checked disabled />
+                Alleen plekken langs de route
+              </label>
+              <button class="route-clear" id="clear-route" type="button" disabled>Route wissen</button>
+              <p class="microcopy" id="route-status" aria-live="polite">
+                Importeer een GPX-track uit bijvoorbeeld Komoot, EuroVelo of cycle.travel.
+              </p>
+            </fieldset>
+
+            <button class="button button-primary osm-button" id="load-osm" type="button">
+              Zoek openbare plekken in beeld
+            </button>
+            <p class="microcopy" id="osm-status" aria-live="polite">
+              Zoom voor het zoeken in tot niveau 7 of dichterbij.
+            </p>
+            <p class="source-shortcuts">
+              <a href="https://udinaturen.dk/kort" target="_blank" rel="noreferrer">Ud i Naturen-kaart ↗</a>
+              <a href="https://www.environmentagency.no/areas-of-activity/right-to-roam/camping/" target="_blank" rel="noreferrer">Noorse tentregels ↗</a>
+              <a href="https://ut.no/kart" target="_blank" rel="noreferrer">UT.no huttenkaart ↗</a>
+            </p>
+          </aside>
+
+          <aside class="place-panel" id="place-panel" aria-live="polite" aria-hidden="true"></aside>
+          <aside class="candidate-panel" id="candidate-panel" aria-live="polite" aria-hidden="true">
+            <div class="candidate-heading">
+              <div><span>Onderweg kiezen</span><strong>Plekken voor vannacht</strong></div>
+              <button class="candidate-close" id="close-candidates" type="button" aria-label="Kandidaten sluiten">×</button>
+            </div>
+            <p class="candidate-intro" id="candidate-intro">Gebruik je positie om geschikte plekken in de buurt of verderop langs je route te rangschikken.</p>
+            <div class="candidate-location-tools">
+              <button class="candidate-location-button" id="candidate-use-location" type="button">
+                <span aria-hidden="true">◎</span>
+                Gebruik huidige locatie
+              </button>
+              <span id="candidate-location-note">Zonder GPS gebruikt Rollout het midden van de kaart.</span>
+            </div>
+            <div class="candidate-horizon" aria-label="Hoe ver wil je nog fietsen?">
+              <span>Nog fietsen</span>
+              <button type="button" data-horizon="15">15 km</button>
+              <button type="button" data-horizon="35" class="is-active">35 km</button>
+              <button type="button" data-horizon="70">70 km</button>
+            </div>
+            <div class="candidate-list" id="candidate-list"></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="public-data.js?v=20260615-4"></script>
+    <script src="app.js?v=20260616-2"></script>
+    <script src="pwa.js"></script>
+  </body>
+</html>
